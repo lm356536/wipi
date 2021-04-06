@@ -65,7 +65,7 @@ import { SearchModule } from './modules/search/search.module';
         ],
         host: configService.get('DB_HOST', '0.0.0.0'),
         port: configService.get<number>('DB_PORT', 3306),
-        username: configService.get('DB_USER', 'root'),
+        username: configService.get('DB_USER', 'roots'),
         password: configService.get('DB_PASSWD', 'root'),
         database: configService.get('DB_DATABASE', 'wipi'),
         charset: 'utf8mb4',
