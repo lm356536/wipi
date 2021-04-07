@@ -20,7 +20,7 @@ if (typeof require !== 'undefined') {
 const isProd = process.env.NODE_ENV === 'production';
 
 const nextConfig = {
-  assetPrefix: isProd ? 'https://cdn.admin.blog.wipi.tech' : '/',
+  // assetPrefix: isProd ? 'https://cdn.admin.blog.wipi.tech' : '/', // cdn加速，assetPrefix：'/' 默认使用服务器本地资源
   webpack: (config) => {
     config.resolve.plugins.push(new TsconfigPathsPlugin());
     config.plugins.push(
