@@ -3,11 +3,10 @@
 node -v
 npm -v
 
-npm config set registry http://registry.npmjs.org
-
-npm install pm2 -g
-npm i -g @nestjs/cli
-npm i -g lerna
+# npm config set registry http://registry.npmjs.org
+# npm install pm2 -g
+# npm i -g @nestjs/cli
+# npm i -g lerna
 
 lerna bootstrap
 lerna run build
