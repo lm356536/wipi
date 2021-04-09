@@ -87,10 +87,10 @@ const _Login: React.FC<ILoginProps> = ({ form }) => {
                 >
                   登录
                 </Button>
-                Or{' '}
+                {/* Or{' '}
                 <Link href="/register">
                   <a>注册用户</a>
-                </Link>
+                </Link> */}
               </Form.Item>
             </Form>
           </div>
