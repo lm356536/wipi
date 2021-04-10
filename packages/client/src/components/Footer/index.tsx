@@ -33,14 +33,14 @@ export const Footer = ({ setting, className = '' }) => {
       <ul className={style.icons}>
         <li>
           <a className={style.github} href="/rss" target="_blank">
-            <RSS />
+            {/* <RSS /> */}
           </a>
         </li>
-        <li>
-          <a className={style.github} href="https://github.com/fantasticit/wipi" target="_blank">
+        {/* <li>
+          <a className={style.github} href="https://github.com/lm356536/wipi" target="_blank">
             <Icon type="github" />
           </a>
-        </li>
+        </li> */}
       </ul>
       {setting && setting.systemFooterInfo && (
         <div

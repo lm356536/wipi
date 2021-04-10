@@ -51,7 +51,7 @@ export const ArticleEditor: React.FC<IProps> = ({
 
   const save = useCallback(() => {
     if (!article.title) {
-      message.warn('至少输入文章标题');
+      message.warn('文章标题不能为空');
       return;
     }
     if (article.category && article.category.id) {
@@ -88,7 +88,7 @@ export const ArticleEditor: React.FC<IProps> = ({
   const publish = useCallback(() => {
     let canPublish = true;
     void [
-      ['title', '请输入文章标题'],
+      ['title', '文章标题不能为空'],
       ['content', '请输入文章内容'],
     ].forEach(([key, msg]) => {
       if (!article[key]) {
@@ -108,7 +108,7 @@ export const ArticleEditor: React.FC<IProps> = ({
       data.category = data.category.id;
     }
     if (!data.title) {
-      message.warn('至少输入文章标题');
+      message.warn('文章标题不能为空');
       return;
     }
     if (Array.isArray(data.tags)) {
@@ -121,6 +121,7 @@ export const ArticleEditor: React.FC<IProps> = ({
     const handle = (res) => {
       setId(res.id);
       message.success(data.status === 'draft' ? '文章已保存' : '文章已发布');
+      Router.replace('/article/index');
     };
     if (id) {
       ArticleProvider.updateArticle(id, data).then(handle);
@@ -151,7 +152,7 @@ export const ArticleEditor: React.FC<IProps> = ({
           title={
             <Input
               style={{ width: 300 }}
-              placeholder="请输入文章标题"
+              placeholder="文章标题不能为空"
               defaultValue={article.title}
               onChange={patchArticle('title')}
             />
