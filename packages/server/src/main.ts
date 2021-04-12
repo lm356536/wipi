@@ -6,7 +6,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { AppModule } from './app.module';
-
+import * as bodyParser from 'body-parser'
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
@@ -21,7 +21,8 @@ async function bootstrap() {
   app.use(helmet());
   app.useGlobalInterceptors(new TransformInterceptor()); // 正常情况下，响应值统一
   app.useGlobalFilters(new HttpExceptionFilter()); // 异常情况下，响应值统一
-
+  app.use(bodyParser.json({limit: '50mb'}));
+  app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
   const config = new DocumentBuilder()
     .setTitle('Wipi Open Api')
     .setDescription('Wipi Open Api Document')

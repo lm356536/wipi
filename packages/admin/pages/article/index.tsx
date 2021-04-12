@@ -162,10 +162,17 @@ const Article: NextPage<IArticleProps> = ({
       })
     }
     , [params])
-
-  const onChangeAllType = () => {
-    console.log('change All type', rowKey)
-  };
+  // 批量修改文章类别
+  const batchEditArticleType =
+  useCallback(
+    (rowKey) => {
+      ArticleProvider.batchEditArticleType(rowKey).then(()=>{
+        message.success('文章批量修改成功');
+        getArticles(params)
+      })
+    },
+    [params]
+  );
 
   const titleColumn = {
     title: '标题',
@@ -239,10 +246,10 @@ const Article: NextPage<IArticleProps> = ({
               </Popconfirm>
 
               <Divider type="vertical" />
-              <Button type="default" disabled={checkStatus} onClick={onChangeAllType}>
-                <Icon type="edit" />
-               批量修改
-            </Button>
+              <Button type="default" disabled={checkStatus} onClick={()=> batchEditArticleType(rowKey)}>
+                  <Icon type="edit" />
+                  批量修改
+                </Button>
             </>
           }
           scroll={{ x: 1200 }}

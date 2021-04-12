@@ -1,3 +1,4 @@
+import { Article } from './../../../server/src/modules/article/article.entity';
 import { httpProvider } from './http';
 
 export class ArticleProvider {
@@ -99,5 +100,11 @@ export class ArticleProvider {
    */
   static async batchArticles(params: any) {
     return httpProvider.post(`/article/list`, params);
+  }
+  /**
+   * 批量修改文章类型
+   */
+  static  async batchEditArticleType(params: any) {
+    return httpProvider.post(`/article/type/`, params)
   }
 }

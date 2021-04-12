@@ -18,7 +18,7 @@ export class ArticleService {
     private readonly articleRepository: Repository<Article>,
     private readonly tagService: TagService,
     private readonly categoryService: CategoryService
-  ) {}
+  ) { }
 
   /**
    * 创建文章
@@ -300,10 +300,10 @@ export class ArticleService {
    * @returns
    */
   async updateLikesById(data): Promise<Article> {
-    const {id, type} = data
+    const { id, type } = data
     const oldArticle = await this.articleRepository.findOne(id);
     // 当type为up当时候，喜欢数+1，否则-1
-    const tempLikes =  type === 'up' ? (oldArticle.likes + 1) : (oldArticle.likes -1)
+    const tempLikes = type === 'up' ? (oldArticle.likes + 1) : (oldArticle.likes - 1)
     const updatedArticle = await this.articleRepository.merge(oldArticle, {
       likes: tempLikes,
     });
@@ -317,17 +317,6 @@ export class ArticleService {
   async deleteById(id) {
     const article = await this.articleRepository.findOne(id);
     return this.articleRepository.remove(article);
-  }
-  /**
-   * 批量删除
-   * @param list id数组
-   * @returns 
-   */
-  async deleteByIdList(list){
-    list.map(async (id) => {
-      const article = await this.articleRepository.findOne(id)
-      return this.articleRepository.remove(article)
-    })
   }
   /**
    * 关键词搜索文章
@@ -404,9 +393,32 @@ export class ArticleService {
         }
         query.setParameter(paramKey, `%${kw.w}%`);
       });
-    } catch (e) {}
-
+    } catch (e) { }
     const data = await query.getMany();
     return data.filter((d) => d.id !== articleId && d.status === 'publish');
+  };
+  /**
+  * 批量删除
+  * @param list id数组
+  * @returns 
+  */
+  async deleteByIdList(list) {
+    list.map(async (id) => {
+      const article = await this.articleRepository.findOne(id)
+      return this.articleRepository.remove(article)
+    })
+  };
+  /**
+* 批量更新文章类型
+* @param data 
+* @returns 
+*/
+  async editTypeByIDList(data) {
+    const {list,categoryId} = data
+    list.map(async (id) => {
+      const oldArticle = await this.articleRepository.findOne(id)
+      const updatedArticle = this.articleRepository.merge(oldArticle, {category: categoryId})
+      return this.articleRepository.remove(updatedArticle)
+    })
   }
 }
