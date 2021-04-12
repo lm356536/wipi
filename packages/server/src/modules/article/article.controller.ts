@@ -27,7 +27,6 @@ import { Article } from './article.entity';
 export class ArticleController {
   constructor(
     private readonly articleService: ArticleService,
-
     private readonly jwtService: JwtService,
     private readonly userService: UserService
   ) {}
@@ -173,5 +172,15 @@ export class ArticleController {
   @UseGuards(JwtAuthGuard)
   deleteById(@Param('id') id) {
     return this.articleService.deleteById(id);
+  }
+  /**
+   * 删除所有文章
+   */
+  @Post('/list')
+  @Roles('admin')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  deleteByIDList(@Body() params) {
+    return this.articleService.deleteByIdList(params)
   }
 }

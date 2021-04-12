@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback} from 'react';
 import { Table, Menu, Dropdown, Icon, Tooltip } from 'antd';
 import { TableSize } from 'antd/es/table';
 import { Pagination } from '@/components/Pagination';
@@ -17,6 +17,7 @@ interface IProps {
   customDataTable?: (data) => React.ReactNode;
   defaultTotal: number;
   onSearch: (arg) => Promise<unknown>;
+  onSetRowKey?: any;
 }
 
 export const DataTable: React.FC<IProps> = ({
@@ -31,6 +32,7 @@ export const DataTable: React.FC<IProps> = ({
   defaultTotal,
   onSearch,
   customDataTable = null,
+  onSetRowKey
 }) => {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -38,7 +40,6 @@ export const DataTable: React.FC<IProps> = ({
   const [size, setSize] = useState<TableSize>('default');
   const [total, setTotal] = useState(defaultTotal);
   const [searchParams, updateSearchParams] = useState({});
-
   const getData = useCallback(() => {
     setLoading(true);
     const params = { page, pageSize, ...searchParams };
@@ -56,6 +57,11 @@ export const DataTable: React.FC<IProps> = ({
     getData();
   }, [page, pageSize, searchParams]);
 
+  const rowSelection = {
+    onChange:(selectedRowKeys, selectedRows) => {
+      onSetRowKey(selectedRowKeys)
+    }
+   }
   const menu = (
     <Menu>
       <Menu.Item onClick={() => setSize('default')}>默认</Menu.Item>
@@ -63,7 +69,6 @@ export const DataTable: React.FC<IProps> = ({
       <Menu.Item onClick={() => setSize('middle')}>中等</Menu.Item>
     </Menu>
   );
-
   return (
     <div className={style.wrapper}>
       <Search
@@ -101,6 +106,7 @@ export const DataTable: React.FC<IProps> = ({
               </div>
             </div>
             <Table
+              rowSelection={rowSelection}
               size={size}
               loading={loading}
               columns={columns}

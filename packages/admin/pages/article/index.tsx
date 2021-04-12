@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
@@ -115,11 +115,16 @@ const Article: NextPage<IArticleProps> = ({
   const [params, setParams] = useState(null);
   const [categorys, setCategorys] = useState<Array<ICategory>>([]);
   const [tags, setTags] = useState<Array<ITag>>([]);
-
+  const [rowKey, setRowKey] = useState([])
+  const [checkStatus, useCheckStatus] = useState(true)
   useEffect(() => {
     CategoryProvider.getCategory().then((res) => setCategorys(res));
     TagProvider.getTags().then((tags) => setTags(tags));
   }, []);
+
+  useEffect(() => {
+    rowKey.length > 0 ? useCheckStatus(false) : useCheckStatus(true)
+  }, [rowKey]);
 
   const getViews = useCallback((url) => {
     setLoading(true);
@@ -148,6 +153,19 @@ const Article: NextPage<IArticleProps> = ({
     },
     [params]
   );
+  // 批量删除文章
+  const batchArticles = useCallback(
+    (rowKey) => {
+      ArticleProvider.batchArticles(rowKey).then(() => {
+        message.success('文章批量删除成功');
+        getArticles(params);
+      })
+    }
+    , [params])
+
+  const onChangeAllType = () => {
+    console.log('change All type', rowKey)
+  };
 
   const titleColumn = {
     title: '标题',
@@ -198,14 +216,34 @@ const Article: NextPage<IArticleProps> = ({
       <div className={style.wrapper}>
         <DataTable
           rightNode={
-            <Link href={'/article/editor'}>
-              <a target="_blank">
-                <Button type="primary">
-                  <Icon type="plus" />
+            <>
+              <Link href={'/article/editor'}>
+                <a target="_blank">
+                  <Button type="primary">
+                    <Icon type="plus" />
                   新建
                 </Button>
-              </a>
-            </Link>
+                </a>
+              </Link>
+              <Divider type="vertical" />
+              <Popconfirm
+                title="确认删除这些文章吗？"
+                onConfirm={() => batchArticles(rowKey)}
+                okText="确认"
+                cancelText="取消"
+              >
+                <Button type="default" disabled={checkStatus} >
+                  <Icon type="delete" />
+                  批量删除
+               </Button>
+              </Popconfirm>
+
+              <Divider type="vertical" />
+              <Button type="default" disabled={checkStatus} onClick={onChangeAllType}>
+                <Icon type="edit" />
+               批量修改
+            </Button>
+            </>
           }
           scroll={{ x: 1200 }}
           data={articles}
@@ -249,6 +287,7 @@ const Article: NextPage<IArticleProps> = ({
               ),
             },
           ]}
+          onSetRowKey={setRowKey}
           onSearch={getArticles}
         />
         <Modal

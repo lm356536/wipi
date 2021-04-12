@@ -318,7 +318,17 @@ export class ArticleService {
     const article = await this.articleRepository.findOne(id);
     return this.articleRepository.remove(article);
   }
-
+  /**
+   * 批量删除
+   * @param list id数组
+   * @returns 
+   */
+  async deleteByIdList(list){
+    list.map(async (id) => {
+      const article = await this.articleRepository.findOne(id)
+      return this.articleRepository.remove(article)
+    })
+  }
   /**
    * 关键词搜索文章
    * @param keyword

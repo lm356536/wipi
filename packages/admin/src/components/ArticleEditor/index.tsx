@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect} from 'react';
 import cls from 'classnames';
 import Router from 'next/router';
 import { Button, Input, message, PageHeader, Icon } from 'antd';
@@ -27,7 +27,6 @@ export const ArticleEditor: React.FC<IProps> = ({
   const [settingDrawerVisible, setSettingDrawerVisible] = useState(false);
   const [id, setId] = useState(defaultId);
   const [article, setArticle] = useState<Partial<IArticle>>(defaultArticle);
-
   const patchArticle = useMemo(
     () => (key) => (value) => {
       if (value.target) {

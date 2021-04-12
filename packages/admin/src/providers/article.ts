@@ -93,4 +93,11 @@ export class ArticleProvider {
   static async deleteArticle(id): Promise<IArticle> {
     return httpProvider.delete(`/article/${id}`);
   }
+  /**
+   * 批量删除文章
+   * @param params 
+   */
+  static async batchArticles(params: any) {
+    return httpProvider.post(`/article/list`, params);
+  }
 }
