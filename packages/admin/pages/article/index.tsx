@@ -221,7 +221,7 @@ const Article: NextPage<IArticleProps> = ({
                 <a target="_blank">
                   <Button type="primary">
                     <Icon type="plus" />
-                  新建
+                  新增文章
                 </Button>
                 </a>
               </Link>
