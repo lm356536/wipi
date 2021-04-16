@@ -151,7 +151,7 @@ const Article: NextPage<IArticleProps> = ({
         getArticles(params);
       });
     },
-    [params]
+    [params, getArticles]
   );
   // 批量删除文章
   const batchArticles = useCallback(
@@ -181,7 +181,11 @@ const Article: NextPage<IArticleProps> = ({
     fixed: 'left',
     width: 200,
     render: (text, record) => (
-      <a href={url.resolve(setting.systemUrl || '', `/article/${record.id}`)} target="_blank">
+      <a
+        href={url.resolve(setting.systemUrl || '', `/article/${record.id}`)}
+        target="_blank"
+        rel="noreferrer"
+      >
         {text}
       </a>
     ),
