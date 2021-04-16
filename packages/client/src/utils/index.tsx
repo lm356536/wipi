@@ -1,6 +1,6 @@
 import { message } from 'antd';
 
-const colors = ['#52c41a', '#f5222d', '#1890ff', '#faad14', '#002bff', '#722ed1'];
+const colors = ['#52c41a', '#f5222d', '#1890ff', '#faad14', '#f90', '#722ed1'];
 
 export const getRandomColor = (() => {
   const cache = {};
