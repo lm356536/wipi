@@ -29,7 +29,7 @@ export class ArticleController {
     private readonly articleService: ArticleService,
     private readonly jwtService: JwtService,
     private readonly userService: UserService
-  ) { }
+  ) {}
 
   /**
    * 创建文章
@@ -181,16 +181,16 @@ export class ArticleController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   deleteByIDList(@Body() params) {
-    return this.articleService.deleteByIdList(params)
+    return this.articleService.deleteByIdList(params);
   }
-/**
- * 批量更新文章类型
- */
+  /**
+   * 批量更新文章类型
+   */
   @Post('/type')
   @Roles('admin')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   editTypeByIDList(@Body() params) {
-    return this.articleService.editTypeByIDList(params)
+    return this.articleService.editTypeByIDList(params);
   }
 }

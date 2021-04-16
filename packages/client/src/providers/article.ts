@@ -89,8 +89,8 @@ export class ArticleProvider {
    * @param id
    * @param type
    */
-  static async updateArticleLikes(id,type): Promise<IArticle> {
-    return httpProvider.post(`/article/${id}/likes`, {type});
+  static async updateArticleLikes(id, type): Promise<IArticle> {
+    return httpProvider.post(`/article/${id}/likes`, { type });
   }
 
   /**

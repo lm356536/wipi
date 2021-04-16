@@ -96,7 +96,7 @@ export class ArticleProvider {
   }
   /**
    * 批量删除文章
-   * @param params 
+   * @param params
    */
   static async batchArticles(params: any) {
     return httpProvider.post(`/article/list`, params);
@@ -104,7 +104,7 @@ export class ArticleProvider {
   /**
    * 批量修改文章类型
    */
-  static  async batchEditArticleType(params: any) {
-    return httpProvider.post(`/article/type/`, params)
+  static async batchEditArticleType(params: any) {
+    return httpProvider.post(`/article/type/`, params);
   }
 }
