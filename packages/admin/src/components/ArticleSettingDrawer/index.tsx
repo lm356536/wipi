@@ -4,7 +4,7 @@ import { FileSelectDrawer } from '@/components/FileSelectDrawer';
 import { CategoryProvider } from '@/providers/category';
 import { TagProvider } from '@/providers/tag';
 import style from './index.module.scss';
-
+const DEFAULT_ATICAL_IMAGE = 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fpic3.zhimg.com%2Fv2-2468dcb92a41bbbf171171d01a745bce_b.jpg&refer=http%3A%2F%2Fpic3.zhimg.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=jpeg?sec=1620824405&t=234bca6dd8a58df3d13a20c2101d2577'
 interface IProps {
   visible: boolean;
   article?: IArticle;
@@ -173,7 +173,7 @@ export const ArticleSettingDrawer: React.FC<IProps> = ({
 
             <Input
               placeholder="或输入外部链接"
-              value={cover}
+              value={cover||DEFAULT_ATICAL_IMAGE}
               onChange={(e) => {
                 setCover(e.target.value);
               }}
