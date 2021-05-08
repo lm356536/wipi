@@ -1,32 +1,51 @@
-import React, { useState, useMemo, useCallback, useEffect} from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import cls from 'classnames';
 import Router from 'next/router';
-import { Button, Input, message, PageHeader, Icon } from 'antd';
+import { Button, Input, message, PageHeader, Modal, Dropdown, Menu } from 'antd';
 import { Helmet } from 'react-helmet';
-import { Seo } from '@/components/Seo';
-import { Editor as MDEditor } from '@components/Editor';
-import { FileSelectDrawer } from '@/components/FileSelectDrawer';
-import { ArticleSettingDrawer } from '@/components/ArticleSettingDrawer';
-import { ArticleProvider } from '@/providers/article';
+import { resolveUrl } from '@/utils';
 import { useSetting } from '@/hooks/useSetting';
+import { useToggle } from '@/hooks/useToggle';
+import { Editor as MDEditor } from '@components/Editor';
+import { ArticleProvider } from '@/providers/article';
+import { ArticleSettingDrawer } from './ArticleSettingDrawer';
 import style from './index.module.scss';
-const url = require('url');
-
 interface IProps {
   id?: string | number;
   article?: IArticle;
 }
 
+const REQUIRED_ARTICLE_ATTRS = [
+  ['title', '请输入文章标题'],
+  ['content', '请输入文章内容'],
+];
+
+// 副作用：传给服务端的 category 需要是 id
+const transformCategory = (article) => {
+  if (article.category && article.category.id) {
+    article.category = article.category.id;
+  }
+};
+const transformTags = (article) => {
+  if (Array.isArray(article.tags)) {
+    try {
+      article.tags = (article.tags as ITag[]).map((t) => t.id).join(',');
+    } catch (e) {
+      console.log(e);
+    }
+  }
+};
+
 export const ArticleEditor: React.FC<IProps> = ({
   id: defaultId,
   article: defaultArticle = { title: '' },
 }) => {
-  const setting = useSetting();
   const isCreate = !defaultId; // 一开始是否是新建
-  const [fileDrawerVisible, setFileDrawerVisible] = useState(false);
-  const [settingDrawerVisible, setSettingDrawerVisible] = useState(false);
+  const setting = useSetting();
   const [id, setId] = useState(defaultId);
   const [article, setArticle] = useState<Partial<IArticle>>(defaultArticle);
+  const [settingDrawerVisible, toggleSettingDrawerVisible] = useToggle(false);
+
   const patchArticle = useMemo(
     () => (key) => (value) => {
       if (value.target) {
@@ -40,104 +59,118 @@ export const ArticleEditor: React.FC<IProps> = ({
     []
   );
 
-  const toggleFileDrawerVisible = useCallback(() => {
-    setFileDrawerVisible((v) => !v);
-  }, []);
-
-  const toggleSettingDrawerVisible = useCallback(() => {
-    setSettingDrawerVisible((v) => !v);
-  }, []);
-
-  const save = useCallback(() => {
-    if (!article.title) {
-      message.warn('文章标题不能为空');
-      return;
-    }
-    if (article.category && article.category.id) {
-      article.category = article.category.id;
-    }
-    if (Array.isArray(article.tags)) {
-      try {
-        article.tags = (article.tags as ITag[]).map((t) => t.id).join(',');
-      } catch (e) {
-        console.log(e);
+  // 校验文章必要属性
+  const check = useCallback(() => {
+    let canPublish = true;
+    let errorMsg = null;
+    REQUIRED_ARTICLE_ATTRS.forEach(([key, msg]) => {
+      if (!article[key]) {
+        errorMsg = msg;
+        canPublish = false;
       }
+    });
+    if (!canPublish) {
+      return Promise.reject(new Error(errorMsg));
     }
-    if (id) {
-      ArticleProvider.updateArticle(id, article).then((res) => {
-        setId(res.id);
-        message.success(res.status === 'draft' ? '文章已保存为草稿' : '文章已发布');
-      });
-    } else {
-      ArticleProvider.addArticle(article).then((res) => {
-        setId(res.id);
-        message.success(res.status === 'draft' ? '文章已保存为草稿' : '文章已发布');
-      });
-    }
-  }, [article, id]);
+    return Promise.resolve();
+  }, [article]);
 
+  // 打开发布抽屉
+  const openSetting = useCallback(() => {
+    check()
+      .then(() => {
+        toggleSettingDrawerVisible();
+      })
+      .catch((err) => {
+        message.warn(err.message);
+      });
+  }, [check, toggleSettingDrawerVisible]);
+
+  const saveSetting = useCallback(
+    (setting) => {
+      toggleSettingDrawerVisible();
+      Object.assign(article, setting);
+    },
+    [article, toggleSettingDrawerVisible]
+  );
+
+  // 保存草稿或者发布线上
+  const saveOrPublish = useCallback(
+    (patch = {}) => {
+      const data = { ...article, ...patch };
+      check()
+        .then(() => {
+          transformCategory(data);
+          transformTags(data);
+          const promise = !isCreate
+            ? ArticleProvider.updateArticle(id, data)
+            : ArticleProvider.addArticle(data);
+          promise.then((res) => {
+            setId(res.id);
+            message.success(res.status === 'draft' ? '文章已保存为草稿' : '文章已发布');
+          });
+        })
+        .catch((err) => {
+          message.warn(err.message);
+        });
+    },
+    [article, isCreate, check, id]
+  );
+
+  const saveDraft = useCallback(() => {
+    saveOrPublish({ status: 'draft' });
+  }, [saveOrPublish]);
+
+  const publish = useCallback(() => {
+    saveOrPublish({ status: 'publish' });
+  }, [saveOrPublish]);
+
+  // 预览文章
   const preview = useCallback(() => {
     if (id) {
-      window.open(url.resolve(setting.systemUrl || '', '/article/' + id));
+      window.open(resolveUrl(setting.systemUrl, '/article/' + id));
     } else {
       message.warn('请先保存');
     }
   }, [id, setting.systemUrl]);
 
-  const publish = useCallback(() => {
-    let canPublish = true;
-    void [
-      ['title', '文章标题不能为空'],
-      ['content', '请输入文章内容'],
-    ].forEach(([key, msg]) => {
-      if (!article[key]) {
-        message.warn(msg);
-        canPublish = false;
-      }
+  const close = useCallback(() => {
+    Modal.confirm({
+      title: '确认关闭？',
+      content: '如果有内容变更，请先保存。',
+      onOk: () => Router.push('/article'),
+      okText: '确认',
+      cancelText: '取消',
     });
-    if (!canPublish) {
-      return;
-    }
-    toggleSettingDrawerVisible();
-  }, [article, toggleSettingDrawerVisible]);
+  }, []);
 
-  const saveOrPublish = (patch) => {
-    const data = { ...article, ...patch };
-    if (data.category && data.category.id) {
-      data.category = data.category.id;
-    }
-    if (!data.title) {
-      message.warn('文章标题不能为空');
+  const deleteArticle = useCallback(() => {
+    if (!id) {
       return;
     }
-    if (Array.isArray(data.tags)) {
-      try {
-        data.tags = data.tags.map((t) => t.id).join(',');
-      } catch (e) {
-        console.log(e);
-      }
-    }
-    const handle = (res) => {
-      setId(res.id);
-      message.success(data.status === 'draft' ? '文章已保存' : '文章已发布');
-      Router.replace('/article/index');
+    const handle = () => {
+      ArticleProvider.deleteArticle(id).then(() => {
+        message.success('文章删除成功');
+        Router.push('/article');
+      });
     };
-    if (id) {
-      ArticleProvider.updateArticle(id, data).then(handle);
-    } else {
-      ArticleProvider.addArticle(data).then(handle);
-    }
-  };
+    Modal.confirm({
+      title: '确认删除？',
+      content: '删除内容后，无法恢复。',
+      onOk: handle,
+      okText: '确认',
+      cancelText: '取消',
+    });
+  }, [id]);
 
   useEffect(() => {
     if (isCreate && id) {
-      setSettingDrawerVisible(false)
+      Router.replace('/article/editor/' + id);
     }
   }, [id, isCreate]);
 
   return (
     <div className={style.wrapper}>
-      <Seo />
       <Helmet>
         <title>{id ? `编辑文章 ${article.title ? '-' + article.title : ''}` : '新建文章'}</title>
       </Helmet>
@@ -147,28 +180,41 @@ export const ArticleEditor: React.FC<IProps> = ({
           style={{
             borderBottom: '1px solid rgb(235, 237, 240)',
           }}
-          onBack={() => window.close()}
+          onBack={close}
           title={
             <Input
               style={{ width: 300 }}
-              placeholder="文章标题不能为空"
+              placeholder="请输入文章标题"
               defaultValue={article.title}
               onChange={patchArticle('title')}
             />
           }
           extra={[
-            <Button key="file" type="dashed" icon="appstore" onClick={toggleFileDrawerVisible}>
-              文件库
-            </Button>,
-            <Button key="dradt" icon="book" onClick={save}>
-              保存草稿
-            </Button>,
-            <Button key="preview" icon="eye" onClick={preview}>
-              预览
-            </Button>,
-            <Button key="publish" type="primary" icon="cloud" onClick={publish}>
+            <Button key="publish" type="primary" onClick={publish}>
               发布
             </Button>,
+            <Dropdown
+              overlay={
+                <Menu>
+                  <Menu.Item disabled={isCreate} key="preview" onClick={preview}>
+                    查看
+                  </Menu.Item>
+                  <Menu.Item key="setting" onClick={openSetting}>
+                    设置
+                  </Menu.Item>
+                  <Menu.Divider />
+                  <Menu.Item key="draft" onClick={saveDraft}>
+                    保存草稿
+                  </Menu.Item>
+                  <Menu.Divider />
+                  <Menu.Item disabled={isCreate} key="delete" onClick={deleteArticle}>
+                    删除
+                  </Menu.Item>
+                </Menu>
+              }
+            >
+              <Button icon="ellipsis" type="link"></Button>
+            </Dropdown>,
           ]}
         />
       </header>
@@ -182,17 +228,11 @@ export const ArticleEditor: React.FC<IProps> = ({
           }}
         />
       </main>
-      <FileSelectDrawer
-        isCopy={true}
-        closeAfterClick={true}
-        visible={fileDrawerVisible}
-        onClose={toggleFileDrawerVisible}
-      />
       <ArticleSettingDrawer
         article={article as IArticle}
         visible={settingDrawerVisible}
         onClose={toggleSettingDrawerVisible}
-        onChange={saveOrPublish}
+        onChange={saveSetting}
       />
     </div>
   );

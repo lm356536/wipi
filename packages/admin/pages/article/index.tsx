@@ -1,11 +1,12 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { Tag, Divider, Badge, Popconfirm, Modal, Spin, Select, Button, Icon, message } from 'antd';
+import { getOneTagColor } from '@/constants';
+import { resolveUrl } from '@/utils';
 import { AdminLayout } from '@/layout/AdminLayout';
 import { ArticleProvider } from '@/providers/article';
-import style from './index.module.scss';
 import { useSetting } from '@/hooks/useSetting';
 import { ViewProvider } from '@/providers/view';
 import { CategoryProvider } from '@/providers/category';
@@ -13,7 +14,7 @@ import { TagProvider } from '@/providers/tag';
 import { ViewChart } from '@/components/ViewChart';
 import { DataTable } from '@/components/DataTable';
 import { LocaleTime } from '@/components/LocaleTime';
-const url = require('url');
+import style from './index.module.scss';
 
 const columns = [
   {
@@ -34,7 +35,7 @@ const columns = [
     render: (category) =>
       category ? (
         <span>
-          <Tag color={'magenta'} key={category.value}>
+          <Tag color={getOneTagColor()} key={category.value}>
             {category.label}
           </Tag>
         </span>
@@ -46,13 +47,9 @@ const columns = [
     dataIndex: 'tags',
     render: (tags) => (
       <span>
-        {tags.map((tag) => {
-          let color = tag.label.length > 2 ? 'geekblue' : 'green';
-          if (tag === 'loser') {
-            color = 'volcano';
-          }
+        {tags.map((tag, idx) => {
           return (
-            <Tag color={color} key={tag.label}>
+            <Tag color={getOneTagColor(idx)} key={tag.label}>
               {tag.label}
             </Tag>
           );
@@ -106,7 +103,6 @@ const Article: NextPage<IArticleProps> = ({
   articles: defaultArticles = [],
   total: defaultTotal = 0,
 }) => {
-  const router = useRouter();
   const setting = useSetting();
   const [articles, setArticles] = useState<IArticle[]>(defaultArticles);
   const [visible, setVisible] = useState(false);
@@ -115,24 +111,17 @@ const Article: NextPage<IArticleProps> = ({
   const [params, setParams] = useState(null);
   const [categorys, setCategorys] = useState<Array<ICategory>>([]);
   const [tags, setTags] = useState<Array<ITag>>([]);
-  const [rowKey, setRowKey] = useState([])
-  const [checkStatus, useCheckStatus] = useState(true)
+
   useEffect(() => {
     CategoryProvider.getCategory().then((res) => setCategorys(res));
     TagProvider.getTags().then((tags) => setTags(tags));
   }, []);
 
-  useEffect(() => {
-    rowKey.length > 0 ? useCheckStatus(false) : useCheckStatus(true)
-  }, [rowKey]);
-
   const getViews = useCallback((url) => {
     setLoading(true);
     ViewProvider.getViewsByUrl(url).then((res) => {
       setViews(res);
-      setTimeout(() => {
-        setLoading(false);
-      }, 500);
+      setLoading(false);
     });
   }, []);
 
@@ -153,26 +142,6 @@ const Article: NextPage<IArticleProps> = ({
     },
     [params, getArticles]
   );
-  // 批量删除文章
-  const batchArticles = useCallback(
-    (rowKey) => {
-      ArticleProvider.batchArticles(rowKey).then(() => {
-        message.success('文章批量删除成功');
-        getArticles(params);
-      })
-    }
-    , [params])
-  // 批量修改文章类别
-  const batchEditArticleType =
-  useCallback(
-    (rowKey) => {
-      ArticleProvider.batchEditArticleType(rowKey).then(()=>{
-        message.success('文章批量修改成功');
-        getArticles(params)
-      })
-    },
-    [params]
-  );
 
   const titleColumn = {
     title: '标题',
@@ -182,7 +151,7 @@ const Article: NextPage<IArticleProps> = ({
     width: 200,
     render: (text, record) => (
       <a
-        href={url.resolve(setting.systemUrl || '', `/article/${record.id}`)}
+        href={resolveUrl(setting.systemUrl, `/article/${record.id}`)}
         target="_blank"
         rel="noreferrer"
       >
@@ -198,13 +167,13 @@ const Article: NextPage<IArticleProps> = ({
     render: (_, record) => (
       <span className={style.action}>
         <Link href={`/article/editor/[id]`} as={`/article/editor/` + record.id}>
-          <a target="_blank">编辑</a>
+          <a>编辑</a>
         </Link>
         <Divider type="vertical" />
         <span
           onClick={() => {
             setVisible(true);
-            getViews(url.resolve(setting.systemUrl || '', '/article/' + record.id));
+            getViews(resolveUrl(setting.systemUrl, '/article/' + record.id));
           }}
         >
           <a>查看访问</a>
@@ -227,34 +196,14 @@ const Article: NextPage<IArticleProps> = ({
       <div className={style.wrapper}>
         <DataTable
           rightNode={
-            <>
-              <Link href={'/article/editor'}>
-                <a target="_blank">
-                  <Button type="primary">
-                    <Icon type="plus" />
-                  新增文章
+            <Link href={'/article/editor'}>
+              <a>
+                <Button type="primary">
+                  <Icon type="plus" />
+                  新建
                 </Button>
-                </a>
-              </Link>
-              <Divider type="vertical" />
-              <Popconfirm
-                title="确认删除这些文章吗？"
-                onConfirm={() => batchArticles(rowKey)}
-                okText="确认"
-                cancelText="取消"
-              >
-                <Button type="default" disabled={checkStatus} >
-                  <Icon type="delete" />
-                  批量删除
-               </Button>
-              </Popconfirm>
-
-              <Divider type="vertical" />
-              <Button type="default" disabled={checkStatus} onClick={()=> batchEditArticleType(rowKey)}>
-                  <Icon type="edit" />
-                  批量修改
-                </Button>
-            </>
+              </a>
+            </Link>
           }
           scroll={{ x: 1200 }}
           data={articles}
@@ -298,7 +247,6 @@ const Article: NextPage<IArticleProps> = ({
               ),
             },
           ]}
-          onSetRowKey={setRowKey}
           onSearch={getArticles}
         />
         <Modal

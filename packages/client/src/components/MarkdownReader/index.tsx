@@ -6,6 +6,17 @@ import './index.module.scss';
 export const MarkdownReader = ({ content }) => {
   const ref = useRef<HTMLDivElement>();
 
+  useEffect(() => {
+    if (!content) {
+      return;
+    }
+    const el = ref.current;
+    const range = document.createRange();
+    const slot = range.createContextualFragment(content);
+    el.innerHTML = '';
+    el.appendChild(slot);
+  }, [content]);
+
   // 高亮
   useEffect(() => {
     if (!ref.current) {
@@ -25,5 +36,5 @@ export const MarkdownReader = ({ content }) => {
     }, 0);
   }, [content]);
 
-  return <div ref={ref} className={'markdown'} dangerouslySetInnerHTML={{ __html: content }}></div>;
+  return <div ref={ref} className={'markdown'}></div>;
 };

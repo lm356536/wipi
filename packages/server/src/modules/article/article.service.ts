@@ -32,7 +32,7 @@ export class ArticleService {
       throw new HttpException('文章标题已存在', HttpStatus.BAD_REQUEST);
     }
 
-    let { tags, category, status } = article;
+    let { tags, category, status } = article; // eslint-disable-line prefer-const
 
     if (status === 'publish') {
       Object.assign(article, {
@@ -256,7 +256,7 @@ export class ArticleService {
    */
   async updateById(id, article: Partial<Article>): Promise<Article> {
     const oldArticle = await this.articleRepository.findOne(id);
-    let { tags, category, status } = article;
+    let { tags, category, status } = article; // eslint-disable-line prefer-const
 
     if (tags) {
       tags = await this.tagService.findByIds(('' + tags).split(','));
@@ -296,16 +296,13 @@ export class ArticleService {
 
   /**
    * 更新喜欢数
-   * @param data
+   * @param id
    * @returns
    */
-  async updateLikesById(data): Promise<Article> {
-    const { id, type } = data;
+  async updateLikesById(id, type): Promise<Article> {
     const oldArticle = await this.articleRepository.findOne(id);
-    // 当type为up当时候，喜欢数+1，否则-1
-    const tempLikes = type === 'up' ? oldArticle.likes + 1 : oldArticle.likes - 1;
     const updatedArticle = await this.articleRepository.merge(oldArticle, {
-      likes: tempLikes,
+      likes: type === 'like' ? oldArticle.likes + 1 : oldArticle.likes - 1,
     });
     return this.articleRepository.save(updatedArticle);
   }
@@ -318,6 +315,7 @@ export class ArticleService {
     const article = await this.articleRepository.findOne(id);
     return this.articleRepository.remove(article);
   }
+
   /**
    * 关键词搜索文章
    * @param keyword
@@ -393,32 +391,9 @@ export class ArticleService {
         }
         query.setParameter(paramKey, `%${kw.w}%`);
       });
-    } catch (e) {}
+    } catch (e) {} // eslint-disable-line no-empty
+
     const data = await query.getMany();
     return data.filter((d) => d.id !== articleId && d.status === 'publish');
-  }
-  /**
-   * 批量删除
-   * @param list id数组
-   * @returns
-   */
-  async deleteByIdList(list) {
-    list.map(async (id) => {
-      const article = await this.articleRepository.findOne(id);
-      return this.articleRepository.remove(article);
-    });
-  }
-  /**
-   * 批量更新文章类型
-   * @param data
-   * @returns
-   */
-  async editTypeByIDList(data) {
-    const { list, categoryId } = data;
-    list.map(async (id) => {
-      const oldArticle = await this.articleRepository.findOne(id);
-      const updatedArticle = this.articleRepository.merge(oldArticle, { category: categoryId });
-      return this.articleRepository.remove(updatedArticle);
-    });
   }
 }

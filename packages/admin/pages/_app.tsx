@@ -1,10 +1,12 @@
 import React from 'react';
 import App from 'next/app';
 import Router from 'next/router';
-import { message } from 'antd';
+import { ConfigProvider, message } from 'antd';
+import zhCN from 'antd/lib/locale/zh_CN';
+import { IGlobalContext, GlobalContext } from '@/context/global';
 import { SettingProvider } from '@/providers/setting';
 import { NProgress } from '@components/NProgress';
-import { IGlobalContext, GlobalContext } from '@/context/global';
+import { Seo } from '@components/Seo';
 import { FixAntdStyleTransition } from '@/components/FixAntdStyleTransition';
 import { ViewStatistics } from '@/components/ViewStatistics';
 import { Analytics } from '@/components/Analytics';
@@ -67,13 +69,16 @@ class MyApp extends App {
     };
 
     return (
-      <GlobalContext.Provider value={contextValue}>
-        <FixAntdStyleTransition />
-        <ViewStatistics />
-        <Analytics />
-        <NProgress color={'#0188fb'} />
-        <Component {...pageProps} />
-      </GlobalContext.Provider>
+      <ConfigProvider locale={zhCN}>
+        <GlobalContext.Provider value={contextValue}>
+          <Seo />
+          <FixAntdStyleTransition />
+          <ViewStatistics />
+          <Analytics />
+          <NProgress color={'#0188fb'} />
+          <Component {...pageProps} />
+        </GlobalContext.Provider>
+      </ConfigProvider>
     );
   }
 }

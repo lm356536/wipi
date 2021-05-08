@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback} from 'react';
-import { Table, Menu, Dropdown, Icon, Tooltip } from 'antd';
+import React, { useState, useEffect, useCallback, useReducer } from 'react';
+import { Table, Icon, Tooltip } from 'antd';
 import { TableSize } from 'antd/es/table';
 import { Pagination } from '@/components/Pagination';
 import { IFieldItem, Search } from '@/components/Search';
@@ -8,7 +8,7 @@ import style from './index.module.scss';
 interface IProps {
   title?: React.ReactNode;
   rightNode?: React.ReactNode;
-  padding?: number;
+  padding?: number | string;
   scroll?: { x?: number; y?: number };
   searchFields: Array<IFieldItem>;
   showSearchLabel?: boolean;
@@ -17,13 +17,26 @@ interface IProps {
   customDataTable?: (data) => React.ReactNode;
   defaultTotal: number;
   onSearch: (arg) => Promise<unknown>;
-  onSetRowKey?: any;
+}
+
+const initialParams = { page: 1, pageSize: 12 };
+function reducer(state: typeof initialParams, action) {
+  switch (action.type) {
+    case 'page':
+      return { ...state, page: action.payload };
+    case 'pageSize':
+      return { ...state, pageSize: action.payload };
+    case 'params':
+      return { ...state, ...action.payload };
+    default:
+      return state;
+  }
 }
 
 export const DataTable: React.FC<IProps> = ({
   title,
   rightNode,
-  padding = 24,
+  padding = '24px 12px',
   scroll = null,
   searchFields = [],
   showSearchLabel = true,
@@ -32,43 +45,28 @@ export const DataTable: React.FC<IProps> = ({
   defaultTotal,
   onSearch,
   customDataTable = null,
-  onSetRowKey
 }) => {
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(12);
   const [size, setSize] = useState<TableSize>('default');
   const [total, setTotal] = useState(defaultTotal);
-  const [searchParams, updateSearchParams] = useState({});
+  const [params, dispatch] = useReducer(reducer, initialParams);
+
   const getData = useCallback(() => {
     setLoading(true);
-    const params = { page, pageSize, ...searchParams };
     onSearch(params)
       .then((res) => {
         setTotal(res[1]);
         setLoading(false);
       })
-      .catch((err) => {
+      .catch(() => {
         setLoading(false);
       });
-  }, [page, pageSize, searchParams]);
+  }, [onSearch, params]);
 
   useEffect(() => {
     getData();
-  }, [page, pageSize, searchParams]);
+  }, [params]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const rowSelection = {
-    onChange:(selectedRowKeys, selectedRows) => {
-      onSetRowKey(selectedRowKeys)
-    }
-   }
-  const menu = (
-    <Menu>
-      <Menu.Item onClick={() => setSize('default')}>默认</Menu.Item>
-      <Menu.Item onClick={() => setSize('small')}>紧凑</Menu.Item>
-      <Menu.Item onClick={() => setSize('middle')}>中等</Menu.Item>
-    </Menu>
-  );
   return (
     <div className={style.wrapper}>
       <Search
@@ -76,8 +74,8 @@ export const DataTable: React.FC<IProps> = ({
         showLabel={showSearchLabel}
         padding={padding}
         onSearch={(params) => {
-          setPage(1);
-          updateSearchParams(params);
+          dispatch({ type: 'page', payload: 1 });
+          dispatch({ type: 'params', payload: params });
         }}
       />
       <div style={{ background: '#fff', padding }}>
@@ -98,15 +96,9 @@ export const DataTable: React.FC<IProps> = ({
                 <Tooltip title="刷新">
                   <Icon type="reload" onClick={getData} style={{ marginLeft: 12 }} />
                 </Tooltip>
-                <Tooltip title="密度">
-                  <Dropdown overlay={menu} placement="bottomLeft" trigger={['click']}>
-                    <Icon type="column-height" style={{ marginLeft: 12 }} />
-                  </Dropdown>
-                </Tooltip>
               </div>
             </div>
             <Table
-              rowSelection={rowSelection}
               size={size}
               loading={loading}
               columns={columns}
@@ -118,12 +110,12 @@ export const DataTable: React.FC<IProps> = ({
           </>
         )}
         <Pagination
-          page={page}
-          pageSize={pageSize}
+          page={params.page}
+          pageSize={params.pageSize}
           total={total}
           onChange={(page, pageSize) => {
-            setPage(page);
-            setPageSize(pageSize);
+            dispatch({ type: 'page', payload: page });
+            dispatch({ type: 'pageSize', payload: pageSize });
           }}
         />
       </div>

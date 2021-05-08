@@ -27,6 +27,7 @@ import { Article } from './article.entity';
 export class ArticleController {
   constructor(
     private readonly articleService: ArticleService,
+
     private readonly jwtService: JwtService,
     private readonly userService: UserService
   ) {}
@@ -142,12 +143,12 @@ export class ArticleController {
   }
 
   /**
-   * 更新喜欢数量
+   * 文章访问量 +1
    */
   @Post(':id/likes')
   @HttpCode(HttpStatus.OK)
   updateLikesById(@Param('id') id, @Body('type') type) {
-    return this.articleService.updateLikesById({ id, type });
+    return this.articleService.updateLikesById(id, type);
   }
 
   /**
@@ -172,25 +173,5 @@ export class ArticleController {
   @UseGuards(JwtAuthGuard)
   deleteById(@Param('id') id) {
     return this.articleService.deleteById(id);
-  }
-  /**
-   * 删除所有文章
-   */
-  @Post('/list')
-  @Roles('admin')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  deleteByIDList(@Body() params) {
-    return this.articleService.deleteByIdList(params);
-  }
-  /**
-   * 批量更新文章类型
-   */
-  @Post('/type')
-  @Roles('admin')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  editTypeByIDList(@Body() params) {
-    return this.articleService.editTypeByIDList(params);
   }
 }

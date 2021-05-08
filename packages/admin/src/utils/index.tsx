@@ -72,3 +72,11 @@ export function debounce(func, wait, immediate = false) {
 
   return debounced;
 }
+
+export function resolveUrl(baseURL = '/', relativeURL) {
+  return relativeURL
+    ? baseURL.replace(/\/+$/, '') + '/' + relativeURL.replace(/^\/+/, '')
+    : baseURL;
+}
+
+export const isOdd = (v) => v % 2 !== 0;
