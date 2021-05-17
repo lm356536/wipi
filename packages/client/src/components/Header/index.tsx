@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Menu, Dropdown } from 'antd';
 import Link from 'next/link';
 import Router, { useRouter } from 'next/router';
@@ -10,13 +10,62 @@ import style from './index.module.scss';
 export const _Header = ({ setting, categories, pages }) => {
   const router = useRouter();
   const asPath = router.asPath;
-  const pathname = router.pathname;
+  const [affix, setAffix] = useState(false);
+  const [affixVisible, setAffixVisible] = useState(false);
   const [visible, setVisible] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
 
+  useEffect(() => {
+    const close = () => {
+      if (visible) {
+        setVisible(false);
+      }
+    };
+
+    Router.events.on('routeChangeStart', close);
+
+    return () => {
+      Router.events.off('routeChangeStart', close);
+    };
+  }, [visible]);
+
+  useEffect(() => {
+    let beforeY =
+      document.documentElement.scrollTop ||
+      window.pageYOffset ||
+      window.scrollY ||
+      document.body.scrollTop;
+
+    const handler = () => {
+      let y =
+        document.documentElement.scrollTop ||
+        window.pageYOffset ||
+        window.scrollY ||
+        document.body.scrollTop;
+
+      setAffix(y > 0);
+      setAffixVisible(beforeY > y);
+      setTimeout(() => {
+        beforeY = y;
+      }, 0);
+    };
+
+    document.addEventListener('scroll', handler);
+
+    return () => {
+      document.removeEventListener('scroll', handler);
+    };
+  }, []);
+
   return (
     <header className={cls(style.header)}>
-      <div className={cls(style.wrapper)}>
+      <div
+        className={cls(
+          style.wrapper,
+          affix ? style.isFixed : false,
+          affixVisible ? style.visible : false
+        )}
+      >
         <div className={cls('container')}>
           <div className={style.logo}>
             {/^http/.test(setting.systemLogo) ? (
@@ -52,12 +101,13 @@ export const _Header = ({ setting, categories, pages }) => {
               </li>
               <Dropdown
                 overlay={
-                  <Menu key="category" style={{ minWidth: 240 }}>
+                  <Menu
+                    key="category"
+                    style={{ minWidth: 240 }}
+                    selectedKeys={[asPath.replace('/', '')]}
+                  >
                     {categories.map((category) => (
-                      <Menu.Item
-                        key={category.value}
-                        onClick={() => Router.push('/' + category.value)}
-                      >
+                      <Menu.Item key={category.value}>
                         <Link href="/[category]" as={`/` + category.value} shallow={false}>
                           <a>
                             <span>{category.label}</span>
@@ -92,10 +142,7 @@ export const _Header = ({ setting, categories, pages }) => {
                 <li
                   key={menu.label}
                   className={cls({
-                    [style.active]:
-                      pathname === menu.path ||
-                      asPath === menu.path ||
-                      (menu.dynamicPath && pathname === menu.dynamicPath),
+                    [style.active]: asPath.replace('/page/', '') === menu.path,
                   })}
                   onClick={() => {
                     if (visible) {

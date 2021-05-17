@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Icon, Spin } from 'antd';
+import { Spin } from 'antd';
 import { ArticleProvider } from '@/providers/article';
 import { ArticleList } from '@components/ArticleList';
 import { LocaleTime } from '@/components/LocaleTime';
@@ -36,7 +36,6 @@ export const ArticleRecommend: React.FC<IProps> = ({
     <div className={style.wrapper}>
       {needTitle && (
         <div className={style.title}>
-          <Icon type="file-text" />
           <span>推荐文章</span>
         </div>
       )}
@@ -68,7 +67,7 @@ export const ArticleRecommend: React.FC<IProps> = ({
             </ul>
           )
         ) : (
-          <ArticleList articles={articles || []} />
+          <ArticleList articles={articles || []} coverHeight={110} />
         )}
       </Spin>
     </div>

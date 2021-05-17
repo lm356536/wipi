@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useContext } from 'react';
+import cls from 'classnames';
 import { NextPage } from 'next';
 import InfiniteScroll from 'react-infinite-scroller';
 import { GlobalContext } from '@/context/global';
@@ -8,7 +9,6 @@ import { ArticleList } from '@components/ArticleList';
 import { ArticleCarousel } from '@components/ArticleCarousel';
 import { ArticleRecommend } from '@/components/ArticleRecommend';
 import { Tags } from '@components/Tags';
-import { Categories } from '@components/Categories';
 import { Footer } from '@components/Footer';
 import style from './index.module.scss';
 
@@ -45,39 +45,25 @@ const Home: NextPage<IHomeProps> = ({
   }, []);
 
   return (
-    <>
-      <DoubleColumnLayout
-        minHeight={'0px'}
-        leftNode={
-          <div className={style.content}>
-            <ArticleCarousel articles={recommendedArticles} />
-            <InfiniteScroll
-              pageStart={1}
-              loadMore={getArticles}
-              hasMore={page * pageSize < total}
-              loader={
-                <div className={'loading'} key={0}>
-                  正在获取文章...
-                </div>
-              }
-            >
-              <ArticleList articles={articles} />
-            </InfiniteScroll>
-          </div>
-        }
-        leftClassName={style.left}
-        rightNode={
-          <>
-            <ArticleRecommend mode="inline" />
-            <div className={'sticky'}>
-              <Categories categories={categories} />
-              <Tags tags={tags} />
-              <Footer className={style.footer} setting={setting} />
+    <div className={style.wrapper}>
+      <ArticleCarousel articles={recommendedArticles} />
+      <div className={cls('container', style.articleWrapper)}>
+        <Tags tags={tags} />
+        <InfiniteScroll
+          pageStart={1}
+          loadMore={getArticles}
+          hasMore={page * pageSize < total}
+          loader={
+            <div className={'loading'} key={0}>
+              正在获取文章...
             </div>
-          </>
-        }
-      />
-    </>
+          }
+        >
+          <ArticleList articles={articles} />
+        </InfiniteScroll>
+      </div>
+      <Footer setting={setting} />
+    </div>
   );
 };
 

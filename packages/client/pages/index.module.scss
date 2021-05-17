@@ -1,7 +1,21 @@
-.left {
-  padding: 0;
-  background: none;
-  border-radius: 0;
+.wrapper {
+  height: 100%;
+  background: var(--bg-body);
+
+  display: flex;
+  flex-direction: column;
+}
+
+
+.articleWrapper {
+  flex: 1;
+  padding: 1rem 0;
+}
+
+@media (max-width: 576px) {
+  .articleWrapper {
+    padding: 1rem .8rem;
+  }
 }
 
 .tagOrCategoryDetail {
@@ -34,10 +48,4 @@
       }
     }
   }
-}
-
-.footer {
-  border-top: 1px solid var(--border-color);
-  color: var(--disable-text-color);
-  background-color: transparent;
 }
